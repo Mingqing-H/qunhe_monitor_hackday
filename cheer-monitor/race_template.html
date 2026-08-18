@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HACKDAY 2026 · 点赞角逐回放</title>
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --panel: #ffffff;
+    --panel2: #f0f3f9;
+    --border: #e2e8f2;
+    --text: #1c2430;
+    --muted: #6b7488;
+    --gold: #b45309;
+    --silver: #94a3b8;
+    --purple: #8b5cf6;
+    --orange: #f59e0b;
+    --blue: #3b82f6;
+    --green: #16a34a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: radial-gradient(1400px 700px at 50% -180px, #e9eef8 0%, var(--bg) 62%);
+    color: var(--text);
+    font-family: 'Cascadia Mono', 'JetBrains Mono', Consolas, 'Courier New', 'Microsoft YaHei', monospace;
+    padding: 22px 18px 48px;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+
+  /* 头部 */
+  .hero { text-align: center; padding: 20px 0 16px; }
+  .hero .kicker { font-size: 12px; letter-spacing: 6px; color: var(--muted); }
+  .hero h1 {
+    font-size: 38px; font-weight: 800; letter-spacing: 2px; margin: 6px 0 16px;
+    background: linear-gradient(90deg, #b45309, #7c3aed, #2563eb);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero-stats { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+  .hstat {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(15,23,42,.05);
+    padding: 10px 18px; min-width: 130px;
+  }
+  .hstat .k { font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+  .hstat .v { font-size: 19px; font-weight: 700; margin-top: 4px; }
+
+  /* 控制条 */
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(15,23,42,.05);
+    padding: 10px 14px; margin: 14px 0 14px;
+  }
+  button, select {
+    background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 7px; padding: 6px 12px; font-family: inherit; font-size: 13px; cursor: pointer;
+  }
+  button:hover { border-color: var(--gold); }
+  button.primary { background: #fdf1dc; border-color: rgba(180,83,9,.5); color: var(--gold); font-weight: 700; }
+  .speed-group { display: flex; gap: 4px; align-items: center; color: var(--muted); font-size: 12px; }
+  .speed-group button.active { border-color: var(--gold); color: var(--gold); font-weight: 700; }
+  .time-label { font-size: 22px; font-weight: 800; letter-spacing: 1px; margin-left: auto; font-variant-numeric: tabular-nums; }
+
+  /* 主网格 */
+  .grid { display: grid; grid-template-columns: 1.7fr 1fr; gap: 14px; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+  .panel h2 { font-size: 12px; color: var(--muted); letter-spacing: 1.5px; margin-bottom: 10px; }
+  canvas { width: 100%; display: block; }
+  #race { border-radius: 8px; }
+  input[type=range] { width: 100%; margin-top: 8px; accent-color: #d97706; }
+
+  /* 实时排名 */
+  #liveBoard { list-style: none; }
+  #liveBoard li {
+    display: flex; align-items: center; gap: 8px; padding: 6px 4px;
+    border-bottom: 1px dashed #e5eaf3; font-size: 13px;
+  }
+  #liveBoard .rk { width: 26px; text-align: center; font-weight: 800; color: var(--silver); flex-shrink: 0; }
+  #liveBoard li.r1 .rk { color: var(--gold); }
+  #liveBoard li.r2 .rk { color: #64748b; }
+  #liveBoard .dot { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
+  #liveBoard .nm { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #liveBoard .ct { font-variant-numeric: tabular-nums; font-weight: 700; }
+  #liveBoard .g { color: var(--green); font-size: 11px; width: 44px; text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* 趋势 */
+  #trend { border-radius: 8px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+
+  /* 最终数据 */
+  .final-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 14px 0; }
+  .fcard {
+    background: linear-gradient(180deg, var(--panel), var(--panel2));
+    border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center;
+    box-shadow: 0 1px 3px rgba(15,23,42,.05);
+  }
+  .fcard .fk { font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+  .fcard .fv { font-size: 22px; font-weight: 800; margin-top: 8px; }
+  .fcard .fv small { font-size: 13px; color: var(--muted); font-weight: 400; }
+  .fcard.gold { border-color: rgba(180,83,9,.4); }
+  .fcard.gold .fv { color: var(--gold); }
+
+  /* 最终表格 */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #edf1f8; }
+  th { color: var(--muted); font-weight: 400; font-size: 11px; letter-spacing: .5px; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tbody tr.p1 td { background: #fdf6e3; font-weight: 700; }
+  tbody tr.p2 td { background: #f1f5f9; font-weight: 700; }
+  .medal { font-size: 14px; }
+  .up { color: var(--green); }
+
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } .hero h1 { font-size: 28px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="kicker">RACE REPLAY</div>
+    <h1>HACKDAY 2026 · 点赞角逐</h1>
+    <div class="hero-stats" id="heroStats"></div>
+  </header>
+
+  <div class="controls">
+    <button id="btnPlay" class="primary">⏸ 暂停</button>
+    <button id="btnRestart" title="重新播放">↺</button>
+    <div class="speed-group">速度
+      <button data-s="1">1×</button>
+      <button data-s="2" class="active">2×</button>
+      <button data-s="4">4×</button>
+      <button data-s="8">8×</button>
+      <button data-s="16">16×</button>
+    </div>
+    <label style="color:var(--muted);font-size:12px">前 <select id="topN">
+      <option>8</option><option selected>12</option><option>16</option><option>20</option>
+    </select> 名</label>
+    <span id="timeLabel" class="time-label">--:--:--</span>
+  </div>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>🎬 条形角逐 · 实时票数</h2>
+      <canvas id="race"></canvas>
+      <input type="range" id="seek" min="0" max="1000" value="0">
+    </section>
+    <aside>
+      <section class="panel">
+        <h2>🏅 实时排名</h2>
+        <ol id="liveBoard"></ol>
+      </section>
+    </aside>
+  </div>
+
+  <section class="panel" style="margin-top:14px">
+    <h2>📈 全程趋势 · 前 8 强</h2>
+    <div class="legend" id="trendLegend"></div>
+    <canvas id="trend"></canvas>
+  </section>
+
+  <div class="final-stats" id="finalStats"></div>
+
+  <section class="panel">
+    <h2>🏆 最终排名</h2>
+    <table>
+      <thead><tr><th></th><th>队伍</th><th>赛道</th><th>队长</th><th class="num">最终点赞</th><th class="num">区间增长</th></tr></thead>
+      <tbody id="finalTable"></tbody>
+    </table>
+  </section>
+
+</div>
+
+<script id="embed" type="application/json">__DATA_JSON__</script>
+<script>
+'use strict';
+const DATA = JSON.parse(document.getElementById('embed').textContent);
+const teams = DATA.teams || [];
+const samples = DATA.samples || [];
+
+if (!samples.length) {
+  document.body.innerHTML = '<p style="padding:60px;text-align:center;color:var(--muted)">还没有记录数据</p>';
+  throw new Error('no data');
+}
+
+// roundRect 兼容(旧浏览器)
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    this.moveTo(x + r, y);
+    this.arcTo(x + w, y, x + w, y + h, r);
+    this.arcTo(x + w, y + h, x, y + h, r);
+    this.arcTo(x, y + h, x, y, r);
+    this.arcTo(x, y, x + w, y, r);
+    this.closePath();
+    return this;
+  };
+}
+
+const idMeta = {};
+for (const t of teams) idMeta[t.id] = t;
+const sampleTimes = samples.map(s => s.t);
+const t0 = sampleTimes[0], tN = sampleTimes[sampleTimes.length - 1];
+const totalReal = (tN - t0) || 1;
+
+const firstCounts = { ...samples[0].counts };
+const lastCounts = { ...samples[samples.length - 1].counts };
+const allIds = new Set();
+for (const s of samples) for (const id in s.counts) allIds.add(id);
+const teamList = [];
+for (const id of allIds) {
+  const m = idMeta[id] || {};
+  teamList.push({ id: Number(id), name: m.name || ('#' + id), track: m.track_name || '', leader: m.leader_name || '—' });
+  if (!(id in firstCounts)) firstCounts[id] = 0;
+  if (!(id in lastCounts)) lastCounts[id] = 0;
+}
+teamList.sort((a, b) => lastCounts[b.id] - lastCounts[a.id]);
+
+const trackColor = (track) => {
+  if (!track) return '#3b82f6';
+  if (track.includes('Aholo')) return '#8b5cf6';
+  if (track.includes('空间智能')) return '#f59e0b';
+  return '#3b82f6';
+};
+function hexToRgba(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+const PALETTE = ['#b45309', '#64748b', '#7c3aed', '#d97706', '#2563eb', '#059669', '#db2777', '#e11d48'];
+
+/* ---------- 插值 ---------- */
+const cur = {};
+function countsAt(t, out) {
+  if (t <= t0) { Object.assign(out, samples[0].counts); return; }
+  if (t >= tN) { Object.assign(out, samples[samples.length - 1].counts); return; }
+  let lo = 0, hi = sampleTimes.length - 1;
+  while (hi - lo > 1) {
+    const mid = (lo + hi) >> 1;
+    if (sampleTimes[mid] <= t) lo = mid; else hi = mid;
+  }
+  const a = samples[lo], b = samples[hi];
+  const f = (t - a.t) / (b.t - a.t);
+  for (const id in a.counts) out[id] = a.counts[id] + (b.counts[id] - a.counts[id]) * f;
+  for (const id in b.counts) if (!(id in a.counts)) out[id] = b.counts[id];
+}
+
+/* ---------- 榜首时段(仅用于最终统计) ---------- */
+function leaderSegments() {
+  const segs = [];
+  let curId = null, start = t0;
+  for (let i = 0; i < samples.length; i++) {
+    const cs = samples[i].counts;
+    let best = null, bv = -1;
+    for (const id in cs) if (cs[id] > bv) { bv = cs[id]; best = id; }
+    if (best !== curId) {
+      if (curId !== null && i > 0) segs.push({ t0: start, t1: samples[i - 1].t, id: curId });
+      curId = best; start = samples[i].t;
+    }
+  }
+  segs.push({ t0: start, t1: tN, id: curId });
+  return segs;
+}
+const segs = leaderSegments();
+const leadDur = {};
+for (const s of segs) leadDur[s.id] = (leadDur[s.id] || 0) + (s.t1 - s.t0);
+
+/* ---------- 动画状态 ---------- */
+let playing = true, speed = 2, topN = 12, prog = 0, lastFrame = 0, lastSide = 0;
+const BASE_DUR = 60000;
+
+const $ = (id) => document.getElementById(id);
+const fmtT = (t) => new Date(t).toLocaleTimeString('zh-CN', { hour12: false });
+const pad = (n, l = 2) => String(n).padStart(l, '0');
+function fmtDur(ms) {
+  const s = Math.round(ms / 1000);
+  return pad(Math.floor(s / 60)) + ':' + pad(s % 60);
+}
+
+/* ---------- 条形角逐 ---------- */
+const raceCanvas = $('race'), raceCtx = raceCanvas.getContext('2d');
+let raceH = 560, dpr = 1, raceW = 0;
+function sizeRace() {
+  raceW = raceCanvas.parentElement.clientWidth;
+  dpr = window.devicePixelRatio || 1;
+  raceCanvas.width = Math.round(raceW * dpr);
+  raceCanvas.height = Math.round(raceH * dpr);
+}
+sizeRace();
+window.addEventListener('resize', () => { sizeRace(); sizeTrend(); });
+
+function drawRace() {
+  raceCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  raceCtx.clearRect(0, 0, raceW, raceH);
+  const sorted = teamList.slice().sort((a, b) => (cur[b.id] || 0) - (cur[a.id] || 0));
+  const top = sorted.slice(0, topN);
+  const maxC = Math.max(...top.map(t => cur[t.id] || 0), 1);
+  const barH = raceH / top.length;
+  const rightNumW = 78;
+
+  for (let r = 0; r < top.length; r++) {
+    const t = top[r];
+    const c = cur[t.id] || 0;
+    const y = r * barH;
+    const baseY = y + barH * 0.5;
+
+    // 行底色(交替)
+    if (r % 2 === 1) {
+      raceCtx.fillStyle = 'rgba(15,23,42,.03)';
+      raceCtx.fillRect(0, y, raceW, barH);
+    }
+
+    // 名次
+    raceCtx.font = '800 15px Consolas, monospace';
+    raceCtx.textBaseline = 'middle';
+    raceCtx.fillStyle = r === 0 ? '#b45309' : r === 1 ? '#64748b' : '#a3aebe';
+    raceCtx.fillText(r + 1, 10, baseY);
+
+    // 名称
+    raceCtx.font = '700 13px "Microsoft YaHei", sans-serif';
+    raceCtx.fillStyle = '#1c2430';
+    raceCtx.textAlign = 'left';
+    raceCtx.fillText(t.name, 38, baseY);
+    const nameW = Math.min(raceCtx.measureText(t.name).width, 180);
+
+    // 条形
+    const barX = 38 + nameW + 14;
+    const barMax = raceW - barX - rightNumW - 14;
+    const bw = Math.max(3, (c / maxC) * barMax);
+    const color = trackColor(t.track);
+    const isLeader = r === 0;
+    raceCtx.fillStyle = isLeader ? '#f5c451' : hexToRgba(color, 0.8);
+    const bh = Math.max(10, barH * 0.5);
+    const ry = baseY - bh / 2;
+    const rad = Math.min(6, bh / 2);
+    raceCtx.beginPath();
+    raceCtx.roundRect(barX, ry, bw, bh, rad);
+    raceCtx.fill();
+    if (isLeader) {
+      raceCtx.strokeStyle = 'rgba(180,83,9,.5)';
+      raceCtx.lineWidth = 1.5;
+      raceCtx.stroke();
+    }
+
+    // 票数
+    raceCtx.font = '800 14px Consolas, monospace';
+    raceCtx.textAlign = 'right';
+    raceCtx.fillStyle = isLeader ? '#b45309' : '#334155';
+    raceCtx.fillText(Math.round(c), raceW - rightNumW + 46, baseY);
+  }
+
+  // 左上角单位水印
+  raceCtx.font = '700 12px Consolas, monospace';
+  raceCtx.textAlign = 'right';
+  raceCtx.fillStyle = 'rgba(107,114,128,.55)';
+  raceCtx.fillText('点赞数', raceW - rightNumW + 46, 14);
+}
+
+/* ---------- 实时排名 ---------- */
+function drawSide() {
+  const sorted = teamList.slice().sort((a, b) => (cur[b.id] || 0) - (cur[a.id] || 0));
+  $('liveBoard').innerHTML = sorted.slice(0, 15).map((t, i) => {
+    const c = Math.round(cur[t.id] || 0);
+    const g = Math.round((cur[t.id] || 0) - (firstCounts[t.id] || 0));
+    const color = trackColor(t.track);
+    return `<li class="${i < 2 ? 'r' + (i + 1) : ''}">
+      <span class="rk">${i + 1}</span>
+      <span class="dot" style="background:${color}"></span>
+      <span class="nm">${t.name}</span>
+      <span class="ct">${c}</span>
+      <span class="g">+${Math.max(0, g)}</span>
+    </li>`;
+  }).join('');
+}
+
+/* ---------- 全程趋势 ---------- */
+const trendCanvas = $('trend'), trendCtx = trendCanvas.getContext('2d');
+const TREND_TOP = 8;
+let trendW = 0, trendH = 280;
+function sizeTrend() {
+  trendW = trendCanvas.parentElement.clientWidth;
+  trendCanvas.width = Math.round(trendW * dpr);
+  trendCanvas.height = Math.round(trendH * dpr);
+}
+sizeTrend();
+
+function drawTrend() {
+  trendCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  trendCtx.clearRect(0, 0, trendW, trendH);
+  const top8 = teamList.slice(0, TREND_TOP);
+  const maxV = Math.max(...top8.map(t => lastCounts[t.id]), 1);
+  const padL = 42, padR = 16, padT = 12, padB = 24;
+  const iw = trendW - padL - padR, ih = trendH - padT - padB;
+
+  // 网格
+  trendCtx.font = '11px Consolas, monospace';
+  for (let g = 0; g <= 4; g++) {
+    const y = padT + (g / 4) * ih;
+    const v = Math.round(maxV * (1 - g / 4));
+    trendCtx.strokeStyle = 'rgba(148,163,184,.35)';
+    trendCtx.lineWidth = 1;
+    trendCtx.beginPath(); trendCtx.moveTo(padL, y); trendCtx.lineTo(trendW - padR, y); trendCtx.stroke();
+    trendCtx.fillStyle = '#94a3b8';
+    trendCtx.textAlign = 'right';
+    trendCtx.fillText(v, padL - 8, y + 4);
+  }
+
+  const xOf = (t) => padL + ((t - t0) / totalReal) * iw;
+  const yOf = (c) => padT + (1 - (c / maxV)) * ih;
+
+  // 各队曲线
+  for (let k = 0; k < top8.length; k++) {
+    const t = top8[k];
+    const color = PALETTE[k];
+    trendCtx.strokeStyle = color;
+    trendCtx.lineWidth = k < 2 ? 2.6 : 1.8;
+    trendCtx.globalAlpha = k < 2 ? 1 : 0.8;
+    trendCtx.beginPath();
+    let started = false;
+    for (const s of samples) {
+      const c = s.counts[t.id];
+      if (c === undefined) continue;
+      const x = xOf(s.t), y = yOf(c);
+      if (!started) { trendCtx.moveTo(x, y); started = true; }
+      else trendCtx.lineTo(x, y);
+    }
+    trendCtx.stroke();
+    trendCtx.globalAlpha = 1;
+  }
+
+  // 时间游标
+  const curT = t0 + prog * totalReal;
+  const cx = xOf(curT);
+  trendCtx.strokeStyle = 'rgba(217,119,6,.5)';
+  trendCtx.setLineDash([4, 4]);
+  trendCtx.beginPath(); trendCtx.moveTo(cx, padT); trendCtx.lineTo(cx, trendH - padB); trendCtx.stroke();
+  trendCtx.setLineDash([]);
+  // 游标处各队圆点
+  for (let k = 0; k < top8.length; k++) {
+    const t = top8[k];
+    const c = cur[t.id];
+    if (c === undefined) continue;
+    trendCtx.fillStyle = PALETTE[k];
+    trendCtx.beginPath();
+    trendCtx.arc(cx, yOf(c), 3.5, 0, Math.PI * 2);
+    trendCtx.fill();
+  }
+}
+
+/* ---------- 最终统计与表格 ---------- */
+function buildFinal() {
+  const champ = teamList[0];
+  const leader = Object.entries(leadDur).sort((a, b) => b[1] - a[1])[0];
+  const leaderName = (idMeta[leader[0]] || {}).name || leader[0];
+  const maxGain = teamList.slice().sort((a, b) =>
+    (lastCounts[b.id] - (firstCounts[b.id] || 0)) - (lastCounts[a.id] - (firstCounts[a.id] || 0)))[0];
+  const total = Object.values(lastCounts).reduce((a, b) => a + b, 0);
+
+  $('finalStats').innerHTML = `
+    <div class="fcard gold"><div class="fk">🏆 冠军</div>
+      <div class="fv">${champ.name}<small> · ${lastCounts[champ.id]} 赞</small></div></div>
+    <div class="fcard"><div class="fk">👑 最长领跑</div>
+      <div class="fv">${leaderName}<small> · ${fmtDur(leadDur[leader[0]])}</small></div></div>
+    <div class="fcard"><div class="fk">⚡ 榜首易主</div>
+      <div class="fv">${Math.max(0, segs.length - 1)}<small> 次</small></div></div>
+    <div class="fcard"><div class="fk">🚀 最大单队增长</div>
+      <div class="fv">${maxGain.name}<small> +${lastCounts[maxGain.id] - (firstCounts[maxGain.id] || 0)}</small></div></div>
+    <div class="fcard"><div class="fk">📊 总点赞</div>
+      <div class="fv">${total}<small> 票</small></div></div>`;
+
+  $('finalTable').innerHTML = teamList.slice(0, 12).map((t, i) => {
+    const g = lastCounts[t.id] - (firstCounts[t.id] || 0);
+    const color = trackColor(t.track);
+    return `<tr class="p${i + 1}">
+      <td class="medal">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td>
+      <td>${t.name}</td>
+      <td style="color:${color}">${t.track}</td>
+      <td>${t.leader}</td>
+      <td class="num">${lastCounts[t.id]}</td>
+      <td class="num up">+${g}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ---------- 头部统计 ---------- */
+function buildHero() {
+  document.addEventListener('dblclick', () => { prog = 0; playing = true; updatePlayBtn(); });
+  $('heroStats').innerHTML = `
+    <div class="hstat"><div class="k">回放区间</div><div class="v">${fmtT(t0)} → ${fmtT(tN)}</div></div>
+    <div class="hstat"><div class="k">快照数</div><div class="v">${samples.length}</div></div>
+    <div class="hstat"><div class="k">参赛队伍</div><div class="v">${teamList.length}</div></div>
+    <div class="hstat"><div class="k">冠军</div><div class="v" style="color:var(--gold)">${teamList[0].name}</div></div>`;
+}
+
+/* ---------- 主循环 ---------- */
+function updateTimeLabel() {
+  $('timeLabel').textContent = fmtT(t0 + prog * totalReal);
+}
+function updateSeek() {
+  $('seek').value = Math.round(prog * 1000);
+}
+function updatePlayBtn() {
+  $('btnPlay').textContent = playing ? '⏸ 暂停' : '▶ 播放';
+}
+
+function loop(ms) {
+  const dt = Math.min(64, ms - lastFrame);
+  lastFrame = ms;
+  if (playing) {
+    prog += (dt * speed) / BASE_DUR;
+    if (prog >= 1) { prog = 1; playing = false; updatePlayBtn(); }
+  }
+  countsAt(t0 + prog * totalReal, cur);
+  drawRace();
+  drawTrend();
+  updateTimeLabel();
+  updateSeek();
+  if (ms - lastSide > 120) { lastSide = ms; drawSide(); }
+  requestAnimationFrame(loop);
+}
+
+$('btnPlay').addEventListener('click', () => { playing = !playing; updatePlayBtn(); });
+$('btnRestart').addEventListener('click', () => { prog = 0; playing = true; updatePlayBtn(); });
+document.querySelectorAll('.speed-group button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    speed = Number(btn.dataset.s);
+    document.querySelectorAll('.speed-group button').forEach(b => b.classList.toggle('active', b === btn));
+  });
+});
+$('topN').addEventListener('change', (e) => { topN = Number(e.target.value); });
+$('seek').addEventListener('input', (e) => { prog = Number(e.target.value) / 1000; });
+
+buildHero();
+buildFinal();
+drawSide();
+drawRace();
+drawTrend();
+updateTimeLabel();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hackday 2026 · 点赞实时监控</title>
+<style>
+  :root {
+    --bg: #0b0e14;
+    --panel: #131722;
+    --panel2: #1a2030;
+    --border: #262e42;
+    --text: #e6edf3;
+    --muted: #7d8799;
+    --green: #34d399;
+    --red: #f87171;
+    --purple: #a78bfa;
+    --orange: #fbbf24;
+    --blue: #60a5fa;
+    --gold: #f5c451;
+    --silver: #b9c4d4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: radial-gradient(1200px 600px at 50% -100px, #1b2130 0%, var(--bg) 60%);
+    color: var(--text);
+    font-family: "Cascadia Mono", "JetBrains Mono", Consolas, "Courier New", monospace;
+    min-height: 100vh;
+    padding: 18px;
+  }
+  .topbar {
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+    justify-content: space-between;
+    max-width: 1100px; margin: 0 auto 16px;
+    padding: 14px 18px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .title { font-size: 18px; font-weight: 700; letter-spacing: 1px; }
+  .title .sub { color: var(--muted); font-size: 13px; font-weight: 400; margin-left: 8px; }
+  .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+  .controls select, .controls button {
+    background: var(--panel2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 5px 10px; font-family: inherit; font-size: 12px; cursor: pointer;
+  }
+  .controls button:hover { border-color: var(--purple); }
+  .controls button.warn:hover { border-color: var(--red); }
+  .controls a.btn {
+    background: var(--panel2); color: var(--green);
+    border: 1px solid rgba(52,211,153,.4); border-radius: 6px;
+    padding: 5px 10px; font-size: 12px; text-decoration: none;
+  }
+  .controls a.btn:hover { border-color: var(--green); background: rgba(52,211,153,.1); }
+  #status { font-size: 12px; }
+  #status.err { color: var(--red); }
+  #rec { font-size: 12px; color: var(--green); }
+  #rec .off { color: var(--muted); }
+  #rec .err { color: var(--red); }
+
+  main { max-width: 1100px; margin: 0 auto; display: grid; gap: 16px; }
+
+  /* ---- 前二名 ---- */
+  .podium { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card {
+    position: relative; overflow: hidden;
+    background: linear-gradient(180deg, var(--panel2), var(--panel));
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 20px;
+  }
+  .card.top1 { border-color: rgba(245,196,81,.55); box-shadow: 0 0 24px rgba(245,196,81,.12); }
+  .card.top2 { border-color: rgba(185,196,212,.35); }
+  .card.rank-swap { animation: swap .9s ease; }
+  @keyframes swap {
+    0% { box-shadow: 0 0 0 rgba(255,255,255,0); }
+    40% { box-shadow: 0 0 30px rgba(255,255,255,.35); }
+    100% { box-shadow: 0 0 0 rgba(255,255,255,0); }
+  }
+  .card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .rank-badge {
+    width: 44px; height: 44px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 800; flex-shrink: 0;
+  }
+  .rank-1 { background: rgba(245,196,81,.14); color: var(--gold); border: 1px solid rgba(245,196,81,.5); }
+  .rank-2 { background: rgba(185,196,212,.12); color: var(--silver); border: 1px solid rgba(185,196,212,.45); }
+  .team-name { font-size: 19px; font-weight: 700; word-break: break-all; }
+  .track-badge {
+    display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px;
+    margin-left: 8px; vertical-align: 2px; border: 1px solid transparent;
+  }
+  .track-purple { color: var(--purple); border-color: rgba(167,139,250,.5); background: rgba(167,139,250,.1); }
+  .track-orange { color: var(--orange); border-color: rgba(251,191,36,.5); background: rgba(251,191,36,.1); }
+  .track-blue   { color: var(--blue);   border-color: rgba(96,165,250,.5);  background: rgba(96,165,250,.1); }
+  .leader { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .card-body { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .big-count { font-size: 46px; font-weight: 800; line-height: 1; letter-spacing: 1px; }
+  .big-count.bump { animation: bump .7s ease; }
+  @keyframes bump {
+    0% { transform: scale(1.55); color: var(--green); }
+    100% { transform: scale(1); }
+  }
+  .delta-row { display: flex; gap: 8px; margin-top: 8px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+  .chip {
+    padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 700;
+    background: var(--panel2); border: 1px solid var(--border);
+  }
+  .chip.up { color: var(--green); border-color: rgba(52,211,153,.45); }
+  .chip.cum { color: var(--muted); }
+  .spark { margin-top: 14px; width: 100%; height: 34px; opacity: .9; }
+
+  /* ---- 面板 ---- */
+  .panel {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 18px;
+  }
+  .panel h2 { font-size: 13px; color: var(--muted); letter-spacing: 1px; margin-bottom: 12px; }
+  .panel h2 .pull-right { float: right; color: var(--muted); font-weight: 400; }
+  #chart { width: 100%; height: 260px; display: block; }
+  .legend { display: flex; gap: 16px; font-size: 12px; margin-bottom: 8px; color: var(--muted); flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; }
+
+  .lower { display: grid; grid-template-columns: 2.2fr 1fr; gap: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid rgba(38,46,66,.55); }
+  th { color: var(--muted); font-weight: 400; font-size: 11px; letter-spacing: .5px; position: sticky; top: 0; }
+  tbody tr:hover { background: rgba(255,255,255,.025); }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .top2-row td { font-weight: 700; }
+  .up { color: var(--green); }
+  .down { color: var(--red); }
+  .zero { color: var(--muted); }
+  .board-wrap { max-height: 420px; overflow-y: auto; }
+  .board-wrap::-webkit-scrollbar { width: 6px; }
+  .board-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  #feed { list-style: none; max-height: 420px; overflow-y: auto; font-size: 12px; }
+  #feed::-webkit-scrollbar { width: 6px; }
+  #feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  #feed li { padding: 6px 4px; border-bottom: 1px dashed rgba(38,46,66,.5); display: flex; gap: 8px; align-items: baseline; }
+  #feed .t { color: var(--muted); flex-shrink: 0; }
+  #feed .n { color: var(--green); font-weight: 700; flex-shrink: 0; }
+  #feed .swap-msg { color: var(--orange); }
+
+  @media (max-width: 820px) {
+    .podium, .lower { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="title">🎬 HACKDAY 2026<span class="sub">点赞实时监控</span></div>
+  <div class="controls">
+    <label>刷新
+      <select id="interval">
+        <option value="1000">1s</option>
+        <option value="2000" selected>2s</option>
+        <option value="3000">3s</option>
+        <option value="5000">5s</option>
+      </select>
+    </label>
+    <button id="pause">⏸ 暂停</button>
+    <button id="clear" class="warn">🗑 清空累计</button>
+    <a class="btn" href="/download/csv" download>⬇ 导出 CSV</a>
+    <span id="status"></span>
+    <span id="rec"></span>
+  </div>
+</header>
+
+<main>
+  <section class="podium" id="podium"></section>
+
+  <section class="panel">
+    <h2>📈 前二名点赞趋势 <span class="pull-right" id="update-time"></span></h2>
+    <div class="legend" id="legend"></div>
+    <canvas id="chart"></canvas>
+  </section>
+
+  <div class="lower">
+    <section class="panel">
+      <h2>🏆 实时排行</h2>
+      <div class="board-wrap">
+        <table>
+          <thead><tr>
+            <th>#</th><th>队伍</th><th>赛道</th><th>队长</th>
+            <th class="num">点赞</th><th class="num">本次 +</th><th class="num">累计 +</th>
+          </tr></thead>
+          <tbody id="board"></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="panel">
+      <h2>🕐 变化记录</h2>
+      <ul id="feed"></ul>
+    </section>
+  </div>
+</main>
+
+<script>
+'use strict';
+const API = '/api/showcase';
+const MAX_HISTORY = 2000;
+const MAX_FEED = 60;
+const BASE_KEY = 'cheer-baseline-v1';
+
+let intervalMs = 2000;
+let timer = null;
+let paused = false;
+let prevCounts = {};
+let baseline = null;     // {t, counts} 累计统计基线(刷新后持久)
+let cumDelta = {};       // 派生值: 当前点赞 - 基线
+let history = [];        // {t, counts:{id:count}} (含服务端记录的历史)
+let feed = [];           // {t, text, cls}
+let meta = {};           // id -> {name, track, leader}
+let lastTop2 = null;     // 上一次前二名的 id 数组
+let lastUpdate = 0;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function trackColor(track) {
+  if (!track) return 'blue';
+  if (track.includes('Aholo')) return 'purple';
+  if (track.includes('空间智能')) return 'orange';
+  return 'blue';
+}
+const TC = { purple: 'var(--purple)', orange: 'var(--orange)', blue: 'var(--blue)' };
+
+function loadBaseline() {
+  try { baseline = JSON.parse(localStorage.getItem(BASE_KEY) || 'null'); } catch { baseline = null; }
+}
+function saveBaseline() {
+  try { localStorage.setItem(BASE_KEY, JSON.stringify(baseline)); } catch {}
+}
+
+/* ---------------- 轮询 ---------------- */
+async function poll() {
+  try {
+    const res = await fetch(API);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message || 'API error');
+
+    const now = Date.now();
+    const teams = data.teams || [];
+    const counts = {};
+
+    for (const t of teams) {
+      counts[t.id] = t.like_count;
+      if (!meta[t.id]) meta[t.id] = { name: t.name, track: t.track_name, leader: t.leader_name };
+    }
+
+    // 首次见到某队伍时,以当前值为基线(避免误报大增量)
+    if (!Object.keys(prevCounts).length) prevCounts = { ...counts };
+
+    const deltas = {};
+    for (const id in counts) {
+      deltas[id] = counts[id] - (prevCounts[id] !== undefined ? prevCounts[id] : counts[id]);
+    }
+    // 累计增量 = 当前值 - 基线值(派生计算,刷新后从历史重建依然一致)
+    if (!baseline) baseline = { t: now, counts: { ...counts } };
+    cumDelta = {};
+    for (const id in counts) {
+      const b = baseline.counts[id];
+      if (b !== undefined && counts[id] >= b) cumDelta[id] = counts[id] - b;
+    }
+
+    history.push({ t: now, counts: { ...counts } });
+    if (history.length > MAX_HISTORY) history.shift();
+
+    // 检测前二名名次变动
+    const top2 = teams
+      .map(t => t.id)
+      .sort((a, b) => (counts[b] - counts[a]) || (a - b))
+      .slice(0, 2);
+    if (lastTop2 && (lastTop2[0] !== top2[0] || lastTop2[1] !== top2[1])) {
+      pushFeed(`⚠️ 前二名变动 → ${meta[top2[0]]?.name || top2[0]} 第1名`, 'swap-msg');
+    }
+    lastTop2 = top2;
+
+    // 变化记录
+    const changed = Object.keys(deltas).filter(id => deltas[id] > 0)
+      .sort((a, b) => deltas[b] - deltas[a]);
+    if (changed.length) {
+      const line = changed.slice(0, 5).map(id => `${meta[id].name} +${deltas[id]}`).join('  ');
+      pushFeed(line + (changed.length > 5 ? `  等 ${changed.length} 个队伍` : ''));
+    }
+
+    prevCounts = { ...counts };
+    lastUpdate = now;
+    render(teams, counts, deltas);
+    setStatus('');
+  } catch (e) {
+    setStatus('⚠ 连接失败: ' + esc(e.message), 'err');
+  }
+}
+
+function pushFeed(text, cls) {
+  feed.unshift({ t: new Date(), text, cls: cls || '' });
+  if (feed.length > MAX_FEED) feed.pop();
+  renderFeed();
+}
+
+/* ---------------- 渲染 ---------------- */
+function render(teams, counts, deltas) {
+  const sorted = teams.slice().sort((a, b) => (counts[b.id] - counts[a.id]) || (a.id - b.id));
+  const top = sorted.slice(0, 2);
+  const topIds = top.map(t => t.id);
+
+  // 前二名卡片
+  const podium = $('podium');
+  podium.innerHTML = top.map((t, i) => {
+    const c = counts[t.id];
+    const d = deltas[t.id] || 0;
+    const cum = cumDelta[t.id] || 0;
+    const tc = trackColor(t.track_name);
+    const bumpCls = d > 0 ? ' bump' : '';
+    const spark = sparkline(t.id, '#a6ffd6');
+    return `
+      <div class="card ${i === 0 ? 'top1' : 'top2'}" data-id="${t.id}">
+        <div class="card-head">
+          <div class="rank-badge ${i === 0 ? 'rank-1' : 'rank-2'}">${i + 1}</div>
+          <div>
+            <div class="team-name">${esc(t.name)}
+              <span class="track-badge track-${tc}">${esc(t.track_name || '')}</span>
+            </div>
+            <div class="leader">👤 ${esc(t.leader_name || '—')}</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div>
+            <div class="big-count${bumpCls}">${counts[t.id].toLocaleString()}</div>
+            <div class="delta-row">
+              <span class="chip ${d > 0 ? 'up' : 'zero'}">${d > 0 ? '▲ +' + d : '– 0'}</span>
+              <span class="chip cum">累计 ${cum > 0 ? '+' + cum : 0}</span>
+            </div>
+          </div>
+          <div>${spark}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // 触发 bump 动画
+  for (const t of top) {
+    const d = deltas[t.id] || 0;
+    if (d > 0) {
+      const el = podium.querySelector(`.card[data-id="${t.id}"] .big-count`);
+      if (el) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+    }
+  }
+
+  // 排行表
+  $('board').innerHTML = sorted.map((t, i) => {
+    const d = deltas[t.id] || 0;
+    const cum = cumDelta[t.id] || 0;
+    const isTop = i < 2;
+    const dCls = d > 0 ? 'up' : (d < 0 ? 'down' : 'zero');
+    const dTxt = d > 0 ? '+' + d : (d < 0 ? d : '0');
+    const tc = trackColor(t.track_name);
+    return `<tr class="${isTop ? 'top2-row' : ''}">
+      <td>${i + 1}</td>
+      <td>${esc(t.name)}</td>
+      <td><span class="track-badge track-${tc}">${esc(t.track_name || '—')}</span></td>
+      <td>${esc(t.leader_name || '—')}</td>
+      <td class="num">${counts[t.id].toLocaleString()}</td>
+      <td class="num ${dCls}">${dTxt}</td>
+      <td class="num zero">${cum > 0 ? '+' + cum : '0'}</td>
+    </tr>`;
+  }).join('');
+
+  // 图例 + 更新时间
+  $('legend').innerHTML = top.map((t, i) =>
+    `<span><i style="background:${i === 0 ? 'var(--gold)' : 'var(--silver)'}"></i>${esc(t.name)}</span>`
+  ).join('');
+  $('update-time').textContent = lastUpdate
+    ? '更新于 ' + new Date(lastUpdate).toLocaleTimeString('zh-CN', { hour12: false })
+    : '';
+
+  drawChart(topIds);
+}
+
+function renderFeed() {
+  $('feed').innerHTML = feed.map(f =>
+    `<li><span class="t">${f.t.toLocaleTimeString('zh-CN', { hour12: false })}</span>` +
+    `<span class="${f.cls}">${esc(f.text)}</span></li>`
+  ).join('');
+}
+
+/* ---------------- 迷你走势线 ---------------- */
+function sparkline(id, color) {
+  const pts = history.slice(-40);
+  const vals = pts.map(p => p.counts[id]).filter(v => v !== undefined);
+  if (vals.length < 2) {
+    return `<svg class="spark" viewBox="0 0 100 34" preserveAspectRatio="none"><text x="2" y="20" fill="#7d8799" font-size="10">等待数据…</text></svg>`;
+  }
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const range = (max - min) || 1;
+  const coords = vals.map((v, i) => {
+    const x = (i / (vals.length - 1)) * 100;
+    const y = 32 - ((v - min) / range) * 28;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  return `<svg class="spark" viewBox="0 0 100 34" preserveAspectRatio="none">
+    <polyline points="${coords.join(' ')}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+/* ---------------- 趋势图 ---------------- */
+let chartDpr = 1;
+function drawChart(topIds) {
+  const canvas = $('chart');
+  const wrap = canvas.parentElement;
+  const cssW = wrap.clientWidth;
+  const cssH = 260;
+  const dpr = window.devicePixelRatio || 1;
+  if (canvas.width !== Math.round(cssW * dpr) || canvas.height !== Math.round(cssH * dpr)) {
+    chartDpr = dpr;
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+  }
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(chartDpr, 0, 0, chartDpr, 0, 0);
+  ctx.clearRect(0, 0, cssW, cssH);
+
+  if (history.length < 2 || !topIds.length) return;
+
+  const W = cssW, H = cssH;
+  const padL = 44, padR = 12, padT = 14, padB = 24;
+  const iw = W - padL - padR, ih = H - padT - padB;
+
+  // 收集两条序列数据
+  const series = topIds.map((id, i) => {
+    const pts = [];
+    for (const p of history) {
+      const v = p.counts[id];
+      if (v !== undefined) pts.push([p.t, v]);
+    }
+    return { id, color: i === 0 ? '#f5c451' : '#b9c4d4', pts };
+  });
+  const allVals = series.flatMap(s => s.pts.map(pt => pt[1]));
+  if (!allVals.length) return;
+  let min = Math.min(...allVals), max = Math.max(...allVals);
+  if (min === max) { min -= 1; max += 1; }
+  const padV = Math.max(2, Math.round((max - min) * 0.12));
+  min -= padV; max += padV;
+  const t0 = history[0].t, t1 = history[history.length - 1].t;
+
+  const xOf = t => padL + ((t - t0) / Math.max(1, t1 - t0)) * iw;
+  const yOf = v => padT + (1 - (v - min) / (max - min)) * ih;
+
+  // 网格
+  ctx.strokeStyle = 'rgba(38,46,66,.6)';
+  ctx.fillStyle = 'var(--muted)';
+  ctx.font = '11px Consolas, monospace';
+  ctx.lineWidth = 1;
+  for (let g = 0; g <= 4; g++) {
+    const y = padT + (g / 4) * ih;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    const v = Math.round(max - (g / 4) * (max - min));
+    ctx.fillText(String(v), padL - 8, y + 4);
+  }
+  // 时间轴
+  for (let g = 0; g <= 4; g++) {
+    const t = t0 + (g / 4) * (t1 - t0);
+    const x = xOf(t);
+    const d = new Date(t);
+    ctx.fillText(d.toLocaleTimeString('zh-CN', { hour12: false }), x, H - 8);
+  }
+
+  // 曲线
+  for (const s of series) {
+    ctx.strokeStyle = s.color;
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    let started = false;
+    for (const pt of s.pts) {
+      const x = xOf(pt[0]), y = yOf(pt[1]);
+      if (!started) { ctx.moveTo(x, y); started = true; }
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    // 最新点
+    if (s.pts.length) {
+      const last = s.pts[s.pts.length - 1];
+      ctx.fillStyle = s.color;
+      ctx.beginPath();
+      ctx.arc(xOf(last[0]), yOf(last[1]), 3.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+/* ---------------- 控制 ---------------- */
+function setStatus(text, cls) {
+  const el = $('status');
+  el.innerHTML = text;
+  el.className = cls || '';
+}
+
+// 启动时从服务端加载已记录的历史,刷新页面不丢数据
+async function init() {
+  try {
+    const r = await fetch('/api/record/history');
+    const d = await r.json();
+    if (!d.success) return;
+    if (Array.isArray(d.teams)) {
+      for (const m of d.teams) meta[m.id] = { name: m.name, track: m.track_name, leader: m.leader_name };
+    }
+    if (Array.isArray(d.samples) && d.samples.length) {
+      history = d.samples.map(s => ({ t: s.t, counts: s.counts || {} }));
+      if (history.length > MAX_HISTORY) history = history.slice(-MAX_HISTORY);
+      const last = history[history.length - 1];
+      prevCounts = { ...last.counts };
+      // 基线优先级: 用户重置过(存于 localStorage) > 记录到的第一个样本
+      loadBaseline();
+      if (!baseline || !baseline.counts) {
+        const first = (d.first && d.first.counts) ? d.first : history[0];
+        baseline = { t: first.t, counts: { ...first.counts } };
+      }
+      // 用已记录数据立即渲染一次
+      cumDelta = {};
+      for (const id in last.counts) {
+        const b = baseline.counts[id];
+        if (b !== undefined && last.counts[id] >= b) cumDelta[id] = last.counts[id] - b;
+      }
+      const teamsList = Object.entries(meta).map(([id, m]) => ({
+        id: Number(id), name: m.name, track_name: m.track, leader_name: m.leader,
+        like_count: last.counts[id] ?? 0, comment_count: 0,
+      }));
+      lastUpdate = last.t;
+      render(teamsList, last.counts, {});
+    }
+  } catch {}
+}
+
+// 记录器状态
+async function pollRec() {
+  try {
+    const r = await fetch('/api/record/status');
+    const d = await r.json();
+    if (!d.success) return;
+    const el = $('rec');
+    if (!d.recording) { el.innerHTML = '<span class="off">记录:关闭</span>'; return; }
+    const t = d.last_t ? new Date(d.last_t).toLocaleTimeString('zh-CN', { hour12: false }) : '—';
+    el.innerHTML = `📊 已记录 <b>${d.samples}</b> 条 · 最近 ${t}` +
+      (d.last_error ? ` · <span class="err">${esc(d.last_error)}</span>` : '');
+  } catch {}
+}
+
+function start() {
+  clearInterval(timer);
+  timer = setInterval(poll, intervalMs);
+}
+function stop() {
+  clearInterval(timer);
+  timer = null;
+}
+function togglePause() {
+  paused = !paused;
+  if (paused) { stop(); $('pause').textContent = '▶ 继续'; setStatus('⏸ 已暂停'); }
+  else { start(); poll(); $('pause').textContent = '⏸ 暂停'; setStatus(''); }
+}
+
+$('interval').addEventListener('change', e => {
+  intervalMs = Number(e.target.value);
+  if (!paused) { stop(); start(); poll(); }
+});
+$('pause').addEventListener('click', togglePause);
+$('clear').addEventListener('click', () => {
+  if (!confirm('重置累计统计(以当前点赞数为新基准)?')) return;
+  baseline = { t: Date.now(), counts: { ...prevCounts } };
+  saveBaseline();
+});
+
+window.addEventListener('resize', () => {
+  if (lastTop2) drawChart(lastTop2);
+});
+
+// 启动: 先加载服务端历史,再开始实时轮询
+renderFeed();
+pollRec();
+setInterval(pollRec, 10000);
+init().then(() => { poll(); start(); });
+</script>
+</body>
+</html>

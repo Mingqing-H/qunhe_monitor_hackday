@@ -1,0 +1,374 @@
+[
+  {
+    "id": 1,
+    "name": "AI 摸奖队",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "纳奇"
+  },
+  {
+    "id": 3,
+    "name": "DeepSheep ",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "正淳"
+  },
+  {
+    "id": 4,
+    "name": "啊对对队",
+    "track_name": "空间智能开放赛道",
+    "leader_name": "日食"
+  },
+  {
+    "id": 5,
+    "name": "你说的都队",
+    "track_name": "空间智能开放赛道",
+    "leader_name": "湖川"
+  },
+  {
+    "id": 6,
+    "name": "Zico",
+    "track_name": "空间智能开放赛道",
+    "leader_name": "济科"
+  },
+  {
+    "id": 7,
+    "name": "霍格沃兹队",
+    "track_name": "空间智能开放赛道",
+    "leader_name": "德龙"
+  },
+  {
+    "id": 8,
+    "name": "许愿柳队",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "立早"
+  },
+  {
+    "id": 9,
+    "name": "冲冲冲",
+    "track_name": "空间智能开放赛道",
+    "leader_name": "阁语"
+  },
+  {
+    "id": 11,
+    "name": "GenForge",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "梦蝶"
+  },
+  {
+    "id": 12,
+    "name": "ááā~omg",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "玄枢"
+  },
+  {
+    "id": 13,
+    "name": "镜花缘",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "灵梦"
+  },
+  {
+    "id": 14,
+    "name": "SpatialEngine",
+    "track_name": "空间智能开放赛道",
+    "leader_name": "鑫淼"
+  },
+  {
+    "id": 15,
+    "name": "SpatialCF",
+    "track_name": "空间智能开放赛道",
+    "leader_name": "洛舟"
+  },
+  {
+    "id": 16,
+    "name": "看见风水",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "水杉"
+  },
+  {
+    "id": 17,
+    "name": "房间异常处理小组",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "脉望"
+  },
+  {
+    "id": 18,
+    "name": "喝奶茶一定要全糖",
+    "track_name": "空间智能开放赛道",
+    "leader_name": "鸣谦"
+  },
+  {
+    "id": 19,
+    "name": "芭比之生巧工坊",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "生巧"
+  },
+  {
+    "id": 20,
+    "name": "Anything Anywhere",
+    "track_name": "空间智能开放赛道",
+    "leader_name": "寻乐"
+  },
+  {
+    "id": 21,
+    "name": "americano wine ",
+    "track_name": "空间智能开放赛道",
+    "leader_name": "宝石"
+  },
+  {
+    "id": 22,
+    "name": "Aloha",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "思扬"
+  },
+  {
+    "id": 23,
+    "name": "预见",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "霜天"
+  },
+  {
+    "id": 24,
+    "name": "酷家厂",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "厂长"
+  },
+  {
+    "id": 25,
+    "name": "0.2秒的领域展开",
+    "track_name": "空间智能开放赛道",
+    "leader_name": "星街"
+  },
+  {
+    "id": 26,
+    "name": "初生牛犊队",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "南野"
+  },
+  {
+    "id": 27,
+    "name": "神神秘秘的队伍",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "真宙"
+  },
+  {
+    "id": 28,
+    "name": "雷欧",
+    "track_name": "空间智能开放赛道",
+    "leader_name": "非空"
+  },
+  {
+    "id": 29,
+    "name": "八方来财",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "天瑜"
+  },
+  {
+    "id": 30,
+    "name": "未雨绸缪",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "木杉"
+  },
+  {
+    "id": 31,
+    "name": "高装一筹",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "图南"
+  },
+  {
+    "id": 32,
+    "name": "空间点灯人&动捕万物",
+    "track_name": "空间智能开放赛道",
+    "leader_name": "一粟"
+  },
+  {
+    "id": 33,
+    "name": "机器人不迷路",
+    "track_name": "空间智能开放赛道",
+    "leader_name": "渡舟"
+  },
+  {
+    "id": 34,
+    "name": "睡个好觉",
+    "track_name": "空间智能开放赛道",
+    "leader_name": "闰土"
+  },
+  {
+    "id": 35,
+    "name": "拾拿九稳",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "拾荒"
+  },
+  {
+    "id": 36,
+    "name": "对这个OO的世界XX了",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "米玄"
+  },
+  {
+    "id": 37,
+    "name": "生产队的LV",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "许秀"
+  },
+  {
+    "id": 38,
+    "name": "懂你意思",
+    "track_name": "空间智能开放赛道",
+    "leader_name": "轻奢"
+  },
+  {
+    "id": 39,
+    "name": "zoomzoom",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "哲良"
+  },
+  {
+    "id": 40,
+    "name": "就是玩儿",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "胧月"
+  },
+  {
+    "id": 41,
+    "name": "卦境",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "墨池"
+  },
+  {
+    "id": 42,
+    "name": "测试没毛病",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "玄戈"
+  },
+  {
+    "id": 43,
+    "name": "S-team",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "鹿芒"
+  },
+  {
+    "id": 44,
+    "name": "会赢的",
+    "track_name": "空间智能开放赛道",
+    "leader_name": "魔丸"
+  },
+  {
+    "id": 45,
+    "name": "神奇项目科目三",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "看看"
+  },
+  {
+    "id": 46,
+    "name": "+−×÷",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "泽涵"
+  },
+  {
+    "id": 47,
+    "name": "勇敢牛牛",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "青耕"
+  },
+  {
+    "id": 48,
+    "name": "NextShot",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "寻迹"
+  },
+  {
+    "id": 49,
+    "name": "量身定制",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "星北"
+  },
+  {
+    "id": 50,
+    "name": "原地退休",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "瑟一"
+  },
+  {
+    "id": 51,
+    "name": "多布龙",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "余多"
+  },
+  {
+    "id": 52,
+    "name": "报名后脑补队",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "季尘"
+  },
+  {
+    "id": 53,
+    "name": "AI包工头",
+    "track_name": "空间智能开放赛道",
+    "leader_name": "陆辛"
+  },
+  {
+    "id": 54,
+    "name": "异想天开队",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "溯光"
+  },
+  {
+    "id": 55,
+    "name": "高斯有位",
+    "track_name": "空间智能开放赛道",
+    "leader_name": "周遍"
+  },
+  {
+    "id": 56,
+    "name": "CADFuture",
+    "track_name": "空间智能开放赛道",
+    "leader_name": "申止"
+  },
+  {
+    "id": 57,
+    "name": "FeynVerse",
+    "track_name": "空间智能开放赛道",
+    "leader_name": "光墨"
+  },
+  {
+    "id": 58,
+    "name": "我是一棵树",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "佩若"
+  },
+  {
+    "id": 59,
+    "name": "打酱油",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "约瑟"
+  },
+  {
+    "id": 60,
+    "name": "棋实不队",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "时中"
+  },
+  {
+    "id": 61,
+    "name": "陪跑or不陪",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "火山"
+  },
+  {
+    "id": 62,
+    "name": "乐呵乐呵",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "乐达"
+  },
+  {
+    "id": 64,
+    "name": "高斯在搞事",
+    "track_name": "Aholo专题赛道",
+    "leader_name": "陌声"
+  },
+  {
+    "id": 65,
+    "name": "对对对",
+    "track_name": "空间智能开放赛道",
+    "leader_name": "卫庄"
+  }
+]
